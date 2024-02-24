@@ -44,9 +44,9 @@ void RemoteReceiverComponent::setup() {
     s.buffer_size++;
   }
 
-  s.buffer = new uint32_t[s.buffer_size];
+  s.buffer = new buffer_type[s.buffer_size];
   void *buf = (void *) s.buffer;
-  memset(buf, 0, s.buffer_size * sizeof(uint32_t));
+  memset(buf, 0, s.buffer_size * sizeof(buffer_type));
 
   // First index is a space.
   if (this->pin_->digital_read()) {
@@ -73,12 +73,12 @@ void RemoteReceiverComponent::loop() {
   auto &s = this->store_;
 
   // copy write at to local variables, as it's volatile
-  const uint32_t write_at = s.buffer_write_at;
+  const buffer_type write_at = s.buffer_write_at;
   const uint32_t dist = (s.buffer_size + write_at - s.buffer_read_at) % s.buffer_size;
   // signals must at least one rising and one leading edge
   if (dist <= 1)
     return;
-  const uint32_t now = micros();
+  const buffer_type now = micros();
   if (now - s.buffer[write_at] < this->idle_us_) {
     // The last change was fewer than the configured idle time ago.
     return;
@@ -89,7 +89,7 @@ void RemoteReceiverComponent::loop() {
 
   // Skip first value, it's from the previous idle level
   s.buffer_read_at = (s.buffer_read_at + 1) % s.buffer_size;
-  uint32_t prev = s.buffer_read_at;
+  buffer_type prev = s.buffer_read_at;
   s.buffer_read_at = (s.buffer_read_at + 1) % s.buffer_size;
   const uint32_t reserve_size = 1 + (s.buffer_size + write_at - s.buffer_read_at) % s.buffer_size;
   this->temp_.clear();
@@ -97,8 +97,8 @@ void RemoteReceiverComponent::loop() {
   int32_t multiplier = s.buffer_read_at % 2 == 0 ? 1 : -1;
 
   for (uint32_t i = 0; prev != write_at; i++) {
-    int32_t delta = s.buffer[s.buffer_read_at] - s.buffer[prev];
-    if (uint32_t(delta) >= this->idle_us_) {
+    buffer_type delta = s.buffer[s.buffer_read_at] - s.buffer[prev];
+    if (buffer_type(delta) >= this->idle_us_) {
       // already found a space longer than idle. There must have been two pulses
       break;
     }

@@ -119,7 +119,7 @@ void RemoteReceiverComponent::decode_rmt_(rmt_item32_t *item, size_t len) {
         if (prev_level) {
           this->temp_.push_back(this->to_microseconds_(prev_length) * multiplier);
         } else {
-          this->temp_.push_back(-int32_t(this->to_microseconds_(prev_length)) * multiplier);
+          this->temp_.push_back(-buffer_type(this->to_microseconds_(prev_length)) * multiplier);
         }
       }
       prev_level = bool(item[i].level0);
@@ -135,7 +135,7 @@ void RemoteReceiverComponent::decode_rmt_(rmt_item32_t *item, size_t len) {
         if (prev_level) {
           this->temp_.push_back(this->to_microseconds_(prev_length) * multiplier);
         } else {
-          this->temp_.push_back(-int32_t(this->to_microseconds_(prev_length)) * multiplier);
+          this->temp_.push_back(-buffer_type(this->to_microseconds_(prev_length)) * multiplier);
         }
       }
       prev_level = bool(item[i].level1);
@@ -146,7 +146,7 @@ void RemoteReceiverComponent::decode_rmt_(rmt_item32_t *item, size_t len) {
     if (prev_level) {
       this->temp_.push_back(this->to_microseconds_(prev_length) * multiplier);
     } else {
-      this->temp_.push_back(-int32_t(this->to_microseconds_(prev_length)) * multiplier);
+      this->temp_.push_back(-buffer_type(this->to_microseconds_(prev_length)) * multiplier);
     }
   }
 }

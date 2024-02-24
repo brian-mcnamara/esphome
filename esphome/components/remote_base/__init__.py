@@ -25,6 +25,7 @@ from esphome.const import (
     CONF_REPEAT,
     CONF_WAIT_TIME,
     CONF_TIMES,
+    CONF_TYPE,
     CONF_TYPE_ID,
     CONF_CARRIER_FREQUENCY,
     CONF_RC_CODE_1,
@@ -42,6 +43,8 @@ AUTO_LOAD = ["binary_sensor"]
 CONF_RECEIVER_ID = "receiver_id"
 CONF_TRANSMITTER_ID = "transmitter_id"
 CONF_FIRST = "first"
+
+BUFFER_TYPE = {"INT8": cg.int8, "INT16": cg.int16, "INT32": cg.int32}
 
 ns = remote_base_ns = cg.esphome_ns.namespace("remote_base")
 RemoteProtocol = ns.class_("RemoteProtocol")
@@ -110,7 +113,7 @@ def register_trigger(name, type, data_type):
     registerer = TRIGGER_REGISTRY.register(f"on_{name}", validator)
 
     def decorator(func):
-        async def new_func(config):
+        async def new_func(config, parent_config):
             var = cg.new_Pvariable(config[CONF_TRIGGER_ID])
             await coroutine(func)(var, config)
             await automation.build_automation(var, [(data_type, "x")], config)
@@ -249,7 +252,7 @@ async def build_triggers(full_config):
     for key in TRIGGER_REGISTRY:
         for config in full_config.get(key, []):
             func = TRIGGER_REGISTRY[key][0]
-            triggers.append(await func(config))
+            triggers.append(await func(config, full_config))
     return triggers
 
 
@@ -905,9 +908,34 @@ def raw_binary_sensor(var, config):
     cg.add(var.set_len(len(code_)))
 
 
-@register_trigger("raw", RawTrigger, cg.std_vector.template(cg.int32))
-def raw_trigger(var, config):
-    pass
+raw_validator = automation.validate_automation(
+    {
+        cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(RawTrigger),
+        cv.Optional(CONF_RECEIVER_ID): cv.invalid(
+            "This has been removed in ESPHome 2022.3.0 and the trigger attaches directly to the parent receiver."
+        ),
+    }
+)
+raw_registerer = TRIGGER_REGISTRY.register("on_raw", raw_validator)
+
+
+async def raw_trigger(config, parent_config):
+    var = cg.new_Pvariable(config[CONF_TRIGGER_ID])
+    type = cg.int32
+    if CONF_TYPE in parent_config:
+        if parent_config[CONF_TYPE] == "INT8":
+            type = cg.int8
+            cg.add_define("RECEIVER_UINT8")
+        elif parent_config[CONF_TYPE] == "INT16":
+            type = cg.int16
+            cg.add_define("RECEIVER_UINT16")
+    await automation.build_automation(
+        var, [(cg.std_vector.template(type), "x")], config
+    )
+    return var
+
+
+raw_registerer(raw_trigger)
 
 
 @register_dumper("raw", RawDumper)

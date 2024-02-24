@@ -15,7 +15,7 @@ struct RemoteReceiverComponentStore {
   /// Stores the time (in micros) that the leading/falling edge happened at
   ///  * An even index means a falling edge appeared at the time stored at the index
   ///  * An uneven index means a rising edge appeared at the time stored at the index
-  volatile uint32_t *buffer{nullptr};
+  volatile buffer_type *buffer{nullptr};
   /// The position last written to
   volatile uint32_t buffer_write_at;
   /// The position last read from

@@ -10,6 +10,7 @@ from esphome.const import (
     CONF_IDLE,
     CONF_PIN,
     CONF_TOLERANCE,
+    CONF_TYPE,
     CONF_MEMORY_BLOCKS,
 )
 from esphome.core import CORE, TimePeriod
@@ -45,6 +46,9 @@ CONFIG_SCHEMA = remote_base.validate_triggers(
                 CONF_IDLE, default="10ms"
             ): cv.positive_time_period_microseconds,
             cv.Optional(CONF_MEMORY_BLOCKS, default=3): cv.Range(min=1, max=8),
+            cv.Optional(CONF_TYPE, default="INT32"): cv.enum(
+                remote_base.BUFFER_TYPE, upper=True, space="_"
+            ),
         }
     ).extend(cv.COMPONENT_SCHEMA)
 )

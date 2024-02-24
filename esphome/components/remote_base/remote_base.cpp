@@ -54,14 +54,14 @@ bool RemoteReceiveData::peek_space_at_least(uint32_t length, uint32_t offset) co
   return value <= 0 && lo <= -value;
 }
 
-bool RemoteReceiveData::expect_mark(uint32_t length) {
+bool RemoteReceiveData::expect_mark(buffer_type length) {
   if (!this->peek_mark(length))
     return false;
   this->advance();
   return true;
 }
 
-bool RemoteReceiveData::expect_space(uint32_t length) {
+bool RemoteReceiveData::expect_space(buffer_type length) {
   if (!this->peek_space(length))
     return false;
   this->advance();

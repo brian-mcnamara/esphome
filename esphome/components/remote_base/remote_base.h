@@ -12,10 +12,19 @@
 #include <driver/rmt.h>
 #endif
 
+#if defined(RECEIVER_UINT8)
+  using buffer_type = int8_t;
+#elif defined(RECEIVER_UINT16)
+  using buffer_type = int16_t;
+#else
+  using buffer_type = int32_t;
+#endif
+
 namespace esphome {
 namespace remote_base {
 
-using RawTimings = std::vector<int32_t>;
+using RawTransmitTimings = std::vector<int32_t>;
+using RawTimings = std::vector<buffer_type>;
 
 class RemoteTransmitData {
  public:
@@ -28,15 +37,15 @@ class RemoteTransmitData {
   void reserve(uint32_t len) { this->data_.reserve(len); }
   void set_carrier_frequency(uint32_t carrier_frequency) { this->carrier_frequency_ = carrier_frequency; }
   uint32_t get_carrier_frequency() const { return this->carrier_frequency_; }
-  const RawTimings &get_data() const { return this->data_; }
-  void set_data(const RawTimings &data) { this->data_ = data; }
+  const RawTransmitTimings &get_data() const { return this->data_; }
+  void set_data(const RawTransmitTimings &data) { this->data_ = data; }
   void reset() {
     this->data_.clear();
     this->carrier_frequency_ = 0;
   }
 
  protected:
-  RawTimings data_{};
+  RawTransmitTimings data_{};
   uint32_t carrier_frequency_{0};
 };
 
@@ -47,10 +56,10 @@ class RemoteReceiveData {
 
   const RawTimings &get_raw_data() const { return this->data_; }
   uint32_t get_index() const { return index_; }
-  int32_t operator[](uint32_t index) const { return this->data_[index]; }
+  buffer_type operator[](uint32_t index) const { return this->data_[index]; }
   int32_t size() const { return this->data_.size(); }
   bool is_valid(uint32_t offset) const { return this->index_ + offset < this->data_.size(); }
-  int32_t peek(uint32_t offset = 0) const { return this->data_[this->index_ + offset]; }
+  buffer_type peek(uint32_t offset = 0) const { return this->data_[this->index_ + offset]; }
   bool peek_mark(uint32_t length, uint32_t offset = 0) const;
   bool peek_space(uint32_t length, uint32_t offset = 0) const;
   bool peek_space_at_least(uint32_t length, uint32_t offset = 0) const;
@@ -58,8 +67,8 @@ class RemoteReceiveData {
     return this->peek_space(space, offset + 1) && this->peek_mark(mark, offset);
   }
 
-  bool expect_mark(uint32_t length);
-  bool expect_space(uint32_t length);
+  bool expect_mark(buffer_type length);
+  bool expect_space(buffer_type length);
   bool expect_item(uint32_t mark, uint32_t space);
   bool expect_pulse_with_gap(uint32_t mark, uint32_t space);
   void advance(uint32_t amount = 1) { this->index_ += amount; }

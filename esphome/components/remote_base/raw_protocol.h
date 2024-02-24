@@ -15,20 +15,20 @@ class RawBinarySensor : public RemoteReceiverBinarySensorBase {
     for (size_t i = 0; i < this->len_; i++) {
       auto val = this->data_[i];
       if (val < 0) {
-        if (!src.expect_space(static_cast<uint32_t>(-val)))
+        if (!src.expect_space(static_cast<buffer_type>(-val)))
           return false;
       } else {
-        if (!src.expect_mark(static_cast<uint32_t>(val)))
+        if (!src.expect_mark(static_cast<buffer_type>(val)))
           return false;
       }
     }
     return true;
   }
-  void set_data(const int32_t *data) { data_ = data; }
+  void set_data(const buffer_type *data) { data_ = data; }
   void set_len(size_t len) { len_ = len; }
 
  protected:
-  const int32_t *data_;
+  const buffer_type *data_;
   size_t len_;
 };
 
@@ -42,7 +42,7 @@ class RawTrigger : public Trigger<RawTimings>, public Component, public RemoteRe
 
 template<typename... Ts> class RawAction : public RemoteTransmitterActionBase<Ts...> {
  public:
-  void set_code_template(std::function<RawTimings(Ts...)> func) { this->code_func_ = func; }
+  void set_code_template(std::function<RawTransmitTimings(Ts...)> func) { this->code_func_ = func; }
   void set_code_static(const int32_t *code, size_t len) {
     this->code_static_ = code;
     this->code_static_len_ = len;
@@ -66,7 +66,7 @@ template<typename... Ts> class RawAction : public RemoteTransmitterActionBase<Ts
   }
 
  protected:
-  std::function<RawTimings(Ts...)> code_func_{nullptr};
+  std::function<RawTransmitTimings(Ts...)> code_func_{nullptr};
   const int32_t *code_static_{nullptr};
   int32_t code_static_len_{0};
 };
